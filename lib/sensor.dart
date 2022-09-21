@@ -1,16 +1,16 @@
-// ignore_for_file: unnecessary_null_comparison
 
 import 'dart:async';
 import 'dart:convert' show utf8;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import 'drawer.dart';
 import 'homeui.dart';
 
 class SensorPage extends StatefulWidget {
   const SensorPage({Key? key, required this.device}) : super(key: key);
-  final BluetoothDevice device;
+  final BluetoothDevice? device;
 
   @override
   SensorPageState createState() => SensorPageState();
@@ -22,12 +22,10 @@ class SensorPageState extends State<SensorPage> {
   late bool isReady;
   late Stream<List<int>> stream;
   late List espData;
-  double _palm = 0;    //palm battery %
-  double _remote = 0;  //remote battery %
-  double _palmCh = 0;  // Palm Charging Count
-  double _remoteCh = 0; // Remote Charging Count
-  double _openC = 0;   // Open Close
-  double _loadC = 0;  // Load Current
+  double _palmBt = 0; //palm battery %
+  double _remoteBt = 0; //remote battery %
+  double _handOpenCloseData = 0; // Palm Charging Count
+  var _ShowError = ""; // Remote Charging Count
 
   @override
   void initState() {
@@ -38,7 +36,7 @@ class SensorPageState extends State<SensorPage> {
 
   @override
   void dispose() {
-    widget.device.disconnect();
+    widget.device?.disconnect();
     super.dispose();
   }
 
@@ -55,7 +53,7 @@ class SensorPageState extends State<SensorPage> {
       }
     });
 
-    await widget.device.connect();
+    await widget.device?.connect();
     discoverServices();
   }
 
@@ -64,7 +62,7 @@ class SensorPageState extends State<SensorPage> {
       _pop();
       return;
     }
-    widget.device.disconnect();
+    widget.device?.disconnect();
   }
 
   discoverServices() async {
@@ -72,11 +70,11 @@ class SensorPageState extends State<SensorPage> {
       _pop();
       return;
     }
-    List<BluetoothService> services = await widget.device.discoverServices();
+    List<BluetoothService> services = await widget.device!.discoverServices();
     for (var service in services) {
       if (service.uuid.toString() == serviceUUID) {
         for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == characteristicUUID ) {
+          if (characteristic.uuid.toString() == characteristicUUID) {
             characteristic.setNotifyValue(!characteristic.isNotifying);
             stream = characteristic.value;
 
@@ -122,6 +120,7 @@ class SensorPageState extends State<SensorPage> {
   String _dataParser(List<int> dataFromDevice) {
     return utf8.decode(dataFromDevice);
   }
+
 //***************************Enable Button & AppBar***********************//
 
   bool textBtnswitchState = true;
@@ -133,38 +132,40 @@ class SensorPageState extends State<SensorPage> {
         appBar: AppBar(
           title: const Text('Vispala'),
           actions: [
-             TextButton(
-               onPressed: textBtnswitchState ? () {} : null,
-               style: ButtonStyle(
-                 foregroundColor: MaterialStateProperty.resolveWith(
-                       (states) {
-                     if (states.contains(MaterialState.disabled)) {
-                       return Colors.grey;
-                     } else {
-                       return Colors.white;
-                     }
-                   },
-                 ),
-               ),
-               child: const Text('Enable'),
-             ),
-             Switch(
-               value: textBtnswitchState,
-               onChanged: (newState) {
-                 setState(() {
-                   textBtnswitchState = !textBtnswitchState;
-                 });
-               },
-               activeColor: Colors.red,
-               activeTrackColor: Colors.red[700],
+            TextButton(
+              onPressed: textBtnswitchState ? () {} : null,
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.resolveWith(
+                  (states) {
+                    if (states.contains(MaterialState.disabled)) {
+                      return Colors.grey;
+                    } else {
+                      return Colors.white;
+                    }
+                  },
+                ),
+              ),
+              child: const Text('Enable'),
+            ),
+            Switch(
+              value: textBtnswitchState,
+              onChanged: (newState) {
+                setState(() {
+                  textBtnswitchState = !textBtnswitchState;
+                });
+              },
+              activeColor: Colors.red,
+              activeTrackColor: Colors.red[700],
               // inactiveTrackColor: Colors.grey[100],
-               inactiveThumbColor: Colors.grey,
-             ),
+              inactiveThumbColor: Colors.grey,
+            ),
           ],
           actionsIconTheme: const IconThemeData(
             size: 40,
           ),
         ),
+        drawer: const MyDrawer(),
+
 //**************************************************//
 
         body: Container(
@@ -175,51 +176,47 @@ class SensorPageState extends State<SensorPage> {
                 ))
               : StreamBuilder<List<int>>(
                   stream: stream,
-                  builder: (BuildContext context, AsyncSnapshot<List<int>>snapshot) {
-
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
+                  builder: (BuildContext context,
+                      AsyncSnapshot<List<int>> snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    }
+                  /*  if (snapshot.hasData) {
+                      return Text(snapshot.data.toString(),
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 40));
+                    } */
+                    if (snapshot.connectionState == ConnectionState.active) {
+                      // geting data from bluetooth
+                      var currentValue = _dataParser(snapshot.data!);
+                      var espData = currentValue.split(",");
+                      if (espData[0] != null) {
+                        _palmBt = double.parse(espData[0]);
+                      }
+                      if (espData[1] != null) {
+                        _remoteBt = double.parse(espData[1]);
+                      }
+                      if (espData[2] != null) {
+                        _handOpenCloseData = double.parse(espData[2]);
+                      }
+                      if (espData[3] != null) {
+                        _ShowError =(espData[3]) ;
                       }
 
-                      if (snapshot.connectionState == ConnectionState.active
-
-                      ) {
-                        // geting data from bluetooth
-                        var currentValue = _dataParser(snapshot.data!);
-                        var espData = currentValue.split(",");
-                        if (espData[0] != "nan") {
-                          _palm = double.parse(espData[0]);
-                        }
-                        if (espData[1] != "nan") {
-                          _remote = double.parse(espData[1]);
-                        }
-                        if (espData[2] != "nan") {
-                          _palmCh = double.parse(espData[2]);
-                        }
-                        if (espData[3] != "nan") {
-                          _remoteCh = double.parse(espData[3]);
-                        }
-                        if (espData[4] != "nan") {
-                          _openC = double.parse(espData[4]);
-                        }
-                        if (espData[5] != "nan") {
-                          _loadC = double.parse(espData[5]);
-                        }
 
 
-                        return HomeUI(
-                          espDataR: _remote,
-                          espData: _palm,
-                          palmCharge: _palmCh,
-                          remoteCharge: _remoteCh,
-                          openClose: _openC,
-                          loadCurrent: _loadC,
-                        );
-                      } else {
-                        return const Text('Check the stream');
-                      }
-
-                  }),
+                      return HomeUI(
+                        espDataR: _remoteBt,
+                        espData1: _palmBt,
+                        palmCharge: _handOpenCloseData,
+                        remoteCharge: _ShowError,
+                      );
+                  }
+                  else {
+                      return const Text('Check the stream');
+                     }
+                  }
+                  ),
         ),
       ),
     );

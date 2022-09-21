@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScanResultTile extends StatelessWidget {
   const ScanResultTile({Key? key, required this.result, required this.onTap}) : super(key: key);
@@ -42,7 +42,7 @@ class ScanResultTile extends StatelessWidget {
         style: TextButton.styleFrom(
           primary: Colors.white,
         ),
-              onPressed: (result.advertisementData.connectable) ? onTap : null,
+        onPressed: (result.advertisementData.connectable) ? onTap : null,
         child: const Text('CONNECT'),
       ),
       children: const <Widget>[],
@@ -79,7 +79,7 @@ class ServiceTile extends StatelessWidget {
       return ListTile(
         title: const Text('Service'),
         subtitle:
-            Text('0x${service.uuid.toString().toUpperCase().substring(4, 8)}'),
+        Text('0x${service.uuid.toString().toUpperCase().substring(4, 8)}'),
       );
     }
   }
@@ -88,17 +88,21 @@ class ServiceTile extends StatelessWidget {
 class CharacteristicTile extends StatelessWidget {
   final BluetoothCharacteristic characteristic;
   final List<DescriptorTile> descriptorTiles;
-  final VoidCallback onReadPressed;
-  final VoidCallback onWritePressed;
+
+  final VoidCallback? turnOff;
+  final VoidCallback? extraButton;
+  final VoidCallback? turnOn;
+
   final VoidCallback onNotificationPressed;
 
   const CharacteristicTile(
       {Key? key,
-      required this.characteristic,
-      required this.descriptorTiles,
-      required this.onReadPressed,
-      required this.onWritePressed,
-      required this.onNotificationPressed})
+        required this.characteristic,
+        required this.descriptorTiles,
+        required this.onNotificationPressed,
+        required this.turnOff,
+        required this.extraButton,
+        required this.turnOn})
       : super(key: key);
 
   @override
@@ -129,22 +133,30 @@ class CharacteristicTile extends StatelessWidget {
             children: <Widget>[
               IconButton(
                 icon: Icon(
-                  Icons.file_download,
-                  color: Theme.of(context).iconTheme.color!.withOpacity(0.5),
+                  Icons.lightbulb_outline,
+                  color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
                 ),
-                onPressed: onReadPressed,
+                onPressed: turnOff,
               ),
               IconButton(
-                icon: Icon(Icons.file_upload,
-                    color: Theme.of(context).iconTheme.color!.withOpacity(0.5)),
-                onPressed: onWritePressed,
+                icon: Icon(Icons.lightbulb,
+                    color: Theme.of(context).iconTheme.color?.withOpacity(0.5)),
+                onPressed: turnOn,
+              ),
+              //iconButton for add
+              IconButton(
+                icon: Icon(
+                  Icons.add_circle,
+                  color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
+                ),
+                onPressed: extraButton,
               ),
               IconButton(
                 icon: Icon(
                     characteristic.isNotifying
                         ? Icons.sync_disabled
                         : Icons.sync,
-                    color: Theme.of(context).iconTheme.color!.withOpacity(0.5)),
+                    color: Theme.of(context).iconTheme.color?.withOpacity(0.5)),
                 onPressed: onNotificationPressed,
               )
             ],
@@ -158,11 +170,11 @@ class CharacteristicTile extends StatelessWidget {
 
 class DescriptorTile extends StatelessWidget {
   final BluetoothDescriptor descriptor;
-  final VoidCallback onReadPressed;
-  final VoidCallback onWritePressed;
-
+  final VoidCallback? turnOff;
+  final VoidCallback? turnOn;
+  final VoidCallback? extraButton;
   const DescriptorTile(
-      {Key? key, required this.descriptor, required this.onReadPressed, required this.onWritePressed})
+      {Key? key, required this.descriptor, this.turnOff, this.turnOn, this.extraButton})
       : super(key: key);
 
   @override
@@ -190,17 +202,24 @@ class DescriptorTile extends StatelessWidget {
         children: <Widget>[
           IconButton(
             icon: Icon(
-              Icons.file_download,
+              Icons.lightbulb_outline,
               color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
             ),
-            onPressed: onReadPressed,
+            onPressed: turnOff,
           ),
           IconButton(
             icon: Icon(
-              Icons.file_upload,
+              Icons.lightbulb,
               color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
             ),
-            onPressed: onWritePressed,
+            onPressed: turnOn,
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.add_circle,
+              color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
+            ),
+            onPressed: extraButton,
           )
         ],
       ),

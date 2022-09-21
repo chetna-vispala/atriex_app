@@ -34,7 +34,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  flutter_blue: ^0.8.0
+  flutter_blue_plus:
   sleek_circular_slider: ^2.0.1
   battery_plus: ^2.1.4
 
@@ -55,7 +55,7 @@ flutter:
 
 
   assets:
-    - assets/roof.svg
+    - assets/
     - assets/whiteLogo.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

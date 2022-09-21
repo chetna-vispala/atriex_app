@@ -19,11 +19,11 @@ class _SplashState extends State<Splash> {
   }
 
   _navigatatetohome() async {
-    await Future.delayed(const Duration(seconds: 3), () {});
+    await Future.delayed( const Duration(seconds: 3), () {});
     Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => FlutterBlueApp()));
+            builder: (context) =>  const FindDevicesScreen()));
   }
 
   @override
